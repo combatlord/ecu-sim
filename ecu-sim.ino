@@ -9,6 +9,7 @@ unsigned char STATUS_STARTUP = 0x01;
 unsigned char RETRYING = 0x03;
 unsigned char STATUS_RUNNING = 0x02;
 unsigned char RESP_OK = 0x00;
+unsigned char RESP_FULL = 0x05;
 
 MCP_CAN CAN(CS_PIN);                                      // Set CS to pin 10
                                   // Set CS to pin 9
@@ -27,7 +28,7 @@ unsigned char connection_status = STATUS_STARTUP;
 unsigned char currentValues[NUM_SENSOR_VALUES];
 uint16_t currentTroubleCodes[MAX_TROUBLE_CODES];
 
-uint16_t numTroubleCodes = 2;
+uint16_t numTroubleCodes = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -95,6 +96,16 @@ void setSensorValue(){
 }
 
 void setTroubleCode(){
+  uint16_t codeValue = Serial.read() & 0xFF;
+  codeValue = (codeValue << 8) | (Serial.read() & 0xFF);
+  if(numTroubleCodes == MAX_TROUBLE_CODES){
+    Serial.write(RESP_FULL);
+    return;
+  }
+
+  currentTroubleCodes[numTroubleCodes++] = codeValue;
+  
+  Serial.write(RESP_OK);
   
 }
 
@@ -126,10 +137,10 @@ void handleTroubleCodeReq(unsigned char buf[8]){
       if(numTroubleCodes <= 2){
         unsigned char msgLen = 3 + 2*numTroubleCodes;
         int writePos =0;
-        unsigned char thisResp[1+msgLen];
+        unsigned char thisResp[msgLen];
         thisResp[writePos++] = msgLen;
-        thisResp[writePos++] = 0x43; 
-        thisResp[writePos++] = 0x00  | (2*numTroubleCodes);
+        thisResp[writePos++] = 0x43;
+        thisResp[writePos++] = 0x00 | (2*numTroubleCodes);
         for(int i=0; i< numTroubleCodes; i++){
           thisResp[writePos++] = (currentTroubleCodes[i] >> 8) & 0xFF;
           thisResp[writePos++] = currentTroubleCodes[i] & 0xFF;

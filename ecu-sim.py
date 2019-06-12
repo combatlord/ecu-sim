@@ -1,7 +1,9 @@
+import re
 import serial
 import sys
 
 SETVAL_USAGE = "Usage: setval <key> <value>" 
+SETCODE_USAGE = "Usage: setcode <code>"
 
 def error(error_string):
 	print error_string
@@ -16,7 +18,7 @@ def setValue(connection, parts):
 		print "Key of value too high"
 		return error(SETVAL_USAGE)
 	packet = bytearray()
-	packet.append(0x02);
+	packet.append(0x02)
 	packet.append(key)
 	packet.append(val)
 	connection.write(packet)
@@ -25,7 +27,30 @@ def setValue(connection, parts):
 
 
 def setCode(connection, parts):
-	print "setting code "
+	if (2 < len(parts)):
+		return error(SETCODE_USAGE)
+	code = parts[1].upper()
+	x = re.search("^[PCBU][0-3]{1}[0-9A-F]{3}$", parts[1])
+	if x is None:
+		return error("Bad code \"" + parts[1] + "\"");	
+	if 'P' == code[0]:
+	    byte1 = 0x00
+	elif 'C' == code[0]:
+		byte1 = 0x40
+	elif 'B' == code[0]:
+		byte1 = 0x80
+	elif 'U' == code[0]:
+		byte1 = 0xC0
+
+	byte1 = byte1 | (int(code[1]) << 6)
+	byte2 = ("" + code[2] + code[3]).decode("hex")
+	packet = bytearray()
+	packet.append(0x03)
+	packet.append(byte1)
+	packet.append(byte2)
+	connection.write(packet)
+	resp = connection.read(1)
+	
 
 if len(sys.argv) < 2:
 	print "Usage: ecu-sim.py <port name>"
