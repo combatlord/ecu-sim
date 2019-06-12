@@ -42,8 +42,9 @@ def setCode(connection, parts):
 	elif 'U' == code[0]:
 		byte1 = 0xC0
 
-	byte1 = byte1 | (int(code[1]) << 6)
-	byte2 = ("" + code[2] + code[3]).decode("hex")
+	byte1 = byte1 | (int(code[1]) << 4)
+	byte1 = byte1 | int(("0" + code[2]), 16)
+	byte2 = int(("" + code[3] + code[4]), 16)
 	packet = bytearray()
 	packet.append(0x03)
 	packet.append(byte1)
