@@ -153,15 +153,44 @@ void handleTroubleCodeReq(unsigned char buf[8]){
         unsigned int totalCodesLen = 2*numTroubleCodes;
         unsigned char thisResp[8];
         int writePos =0;
-        thisResp[writePos++] = 7;//length
-        thisResp[writePos++] = 0x43; 
-        thisResp[writePos++] = 0x10 | (totalCodesLen >> 8); //length
-        thisResp[writePos++] = (totalCodesLen) & 0xFF; //length        
-        for(int i=0; i < 2; i++){
-          thisResp[writePos++] = (currentTroubleCodes[i] >> 8) & 0xFF;
-          thisResp[writePos++] = currentTroubleCodes[i] & 0xFF;
+        int codeBytesWritten = 0;
+        thisResp[writePos++] = sizeof(thisResp) -1 ;//length
+        thisResp[writePos++] = 0x43;         
+        for(; writePos <  sizeof(thisResp); writePos++){
+          if(codeBytesWritten % 2 == 0)
+          {
+              thisResp[writePos] = (currentTroubleCodes[codeBytesWritten/2] >> 8) & 0xFF;
+          }
+          else
+          {
+              thisResp[writePos] = currentTroubleCodes[codeBytesWritten/2] & 0xFF;
+          }
+          codeBytesWritten++;
         }
-        CAN.sendMsgBuf(0x7E8, 0, sizeof(thisResp), thisResp);        
+        CAN.sendMsgBuf(0x7E8, 0, sizeof(thisResp), thisResp);
+        int frameNum = 1;
+        while(codeBytesWritten < totalCodesLen){
+          int writePos =0;
+          int thisSize = (totalCodesLen - codeBytesWritten) + 3;
+          thisSize = thisSize > (sizeof(thisResp)) ? sizeof(thisResp) : thisSize;
+          thisResp[writePos++] = thisSize -1 ;//length
+          thisResp[writePos++] = 0x43; 
+          thisResp[writePos++] = 0x20 | frameNum;
+          for(; writePos < thisSize; writePos++){
+            if(codeBytesWritten % 2 == 0)
+              {
+                  thisResp[writePos] = (currentTroubleCodes[codeBytesWritten/2] >> 8) & 0xFF;
+              }
+              else
+              {
+                  thisResp[writePos] = currentTroubleCodes[codeBytesWritten/2] & 0xFF;
+              }
+              codeBytesWritten++;
+          }
+          CAN.sendMsgBuf(0x7E8, 0, thisSize, thisResp);
+          frameNum++;
+        }
+        
       }
             
 }
