@@ -78,7 +78,10 @@ void loop()
           case 0x03:
           case 0x07:
               handleTroubleCodeReq(buf);
-              break;          
+              break;
+          case 0x04:
+              clearErrorCodes();
+              break;
         }
     }
     
@@ -132,9 +135,7 @@ void handleCurrentDataReq(unsigned char buf[8]){
 }
 
 void handleTroubleCodeReq(unsigned char buf[8]){
-      //unsigned char thisResp[] = {0x04, 0x43, 0x04, 0x46, 0x00, 0x46, 0x02}; //This gives ones valid code (C0600)
-      //unsigned char thisResp[] = {0x06, 0x43, 0x00, 0x16, 0x00, 0x06, 0x01}; //sends two (P0601 and P1600), first digit is length
-      if(numTroubleCodes <= 2){
+    if(numTroubleCodes <= 2){
         unsigned char msgLen = 3 + 2*numTroubleCodes;
         int writePos =0;
         unsigned char thisResp[msgLen];
@@ -146,9 +147,9 @@ void handleTroubleCodeReq(unsigned char buf[8]){
           thisResp[writePos++] = currentTroubleCodes[i] & 0xFF;
         }
         CAN.sendMsgBuf(0x7E8, 0, sizeof(thisResp), thisResp);        
-      }
-      else
-      {
+    }
+    else
+    {
         //TODO: handle more than 2 trouble codes
         unsigned int totalCodesLen = 2*numTroubleCodes;
         unsigned char thisResp[8];
@@ -191,6 +192,9 @@ void handleTroubleCodeReq(unsigned char buf[8]){
           frameNum++;
         }
         
-      }
-            
+    }
+}
+
+void clearErrorCodes(){
+  numTroubleCodes = 0;
 }
