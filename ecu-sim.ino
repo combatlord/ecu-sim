@@ -152,43 +152,45 @@ void handleTroubleCodeReq(unsigned char buf[8]){
     {
         //TODO: handle more than 2 trouble codes
         unsigned int totalCodesLen = 2*numTroubleCodes;
-        unsigned char thisResp[8];
+        unsigned char firstResp[8];
         int writePos =0;
         int codeBytesWritten = 0;
-        thisResp[writePos++] = sizeof(thisResp) -1 ;//length
-        thisResp[writePos++] = 0x43;         
-        for(; writePos <  sizeof(thisResp); writePos++){
+        firstResp[writePos++] = sizeof(firstResp) -1 ;//length
+        firstResp[writePos++] = 0x43;
+        for(; writePos <  sizeof(firstResp); writePos++){
           if(codeBytesWritten % 2 == 0)
           {
-              thisResp[writePos] = (currentTroubleCodes[codeBytesWritten/2] >> 8) & 0xFF;
+              firstResp[writePos] = (currentTroubleCodes[codeBytesWritten/2] >> 8) & 0xFF;
           }
           else
           {
-              thisResp[writePos] = currentTroubleCodes[codeBytesWritten/2] & 0xFF;
+              firstResp[writePos] = currentTroubleCodes[codeBytesWritten/2] & 0xFF;
           }
           codeBytesWritten++;
         }
-        CAN.sendMsgBuf(0x7E8, 0, sizeof(thisResp), thisResp);
+        CAN.sendMsgBuf(0x7E8, 0, sizeof(firstResp), firstResp);
         int frameNum = 1;
+        unsigned char nextResp[7];
         while(codeBytesWritten < totalCodesLen){
+          memset(nextResp, 0, sizeof(nextResp));
           int writePos =0;
           int thisSize = (totalCodesLen - codeBytesWritten) + 3;
-          thisSize = thisSize > (sizeof(thisResp)) ? sizeof(thisResp) : thisSize;
-          thisResp[writePos++] = thisSize -1 ;//length
-          thisResp[writePos++] = 0x43; 
-          thisResp[writePos++] = 0x20 | frameNum;
+          thisSize = thisSize > (sizeof(nextResp)) ? sizeof(nextResp) : thisSize;
+          nextResp[writePos++] = thisSize -1 ;//length
+          nextResp[writePos++] = 0x43;
+          nextResp[writePos++] = 0x20 | frameNum;
           for(; writePos < thisSize; writePos++){
             if(codeBytesWritten % 2 == 0)
               {
-                  thisResp[writePos] = (currentTroubleCodes[codeBytesWritten/2] >> 8) & 0xFF;
+                  nextResp[writePos] = (currentTroubleCodes[codeBytesWritten/2] >> 8) & 0xFF;
               }
               else
               {
-                  thisResp[writePos] = currentTroubleCodes[codeBytesWritten/2] & 0xFF;
+                  nextResp[writePos] = currentTroubleCodes[codeBytesWritten/2] & 0xFF;
               }
               codeBytesWritten++;
           }
-          CAN.sendMsgBuf(0x7E8, 0, thisSize, thisResp);
+          CAN.sendMsgBuf(0x7E8, 0, thisSize, nextResp);
           frameNum++;
         }
         
