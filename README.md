@@ -1,5 +1,5 @@
 # ecu-sim
-This is a project to build an OBD2 simulator. 
+This is a project to build an OBD2 simulator. The full writeup [can be found here](https://blog.speedfox.co.uk/articles/1562110227-obd_simulator_for_carputer_development/).
 
 ## Building
 Simply connect to CAN board to and arduino pro micro and an OBD conenctor as shown in obd_sim_diagram.png
