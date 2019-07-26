@@ -29,5 +29,5 @@ The values entered here will be the value retunred from the simualtor before any
 ### setcode
 Adds an error code to the list of error codes returned from teh simulator. For example, to have the simulator return error code P1234 you can run 
 ```
->setcode 1234
+>setcode P1234
 ```
