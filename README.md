@@ -21,7 +21,7 @@ You will now be able to run commands to adjust the values output py the simualto
 
 ## Commands
 ### setval
-Sets the value returned for a partiular property from the simulator. FOr example, to have the simulator return a speed of 80km/h run 
+Sets the value returned for a partiular property from the simulator. For example, to have the simulator return a speed of 80km/h run 
 ```
 >setval 13  80
 ```
